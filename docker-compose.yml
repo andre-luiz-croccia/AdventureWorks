@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  terraform-databricks:
+    build: .
+    image: terraform-databricks
+    env_file: .env  # Carrega as variáveis do arquivo .env
+    volumes:
+      - ./terraform:/workspace/terraform
+    working_dir: /workspace/terraform
+    entrypoint: /bin/sh
+
