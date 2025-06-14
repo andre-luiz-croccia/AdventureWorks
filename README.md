@@ -10,7 +10,16 @@
 - **set_env.sh**: Script para exportar variáveis do `.env` no formato que o Terraform reconhece.
 
 ---
-
+```mermaid
+fluxograma TD
+    A[Preencher .env] --> B[Executar Docker Compose]
+    B --> C[Container inicia set_env.sh]
+    C --> D[Exporta variáveis TF_VAR_]
+    D --> E[Terraform init/apply]
+    E --> F[Upload dos notebooks para Databricks]
+    F --> G[Notebooks disponíveis para execução]
+    G --> H[Executar os Notebooks no Databricks]
+```
 ## Como Funciona
 
 1. **Configuração das variáveis sensíveis**  

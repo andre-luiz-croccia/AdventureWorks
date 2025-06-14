@@ -109,7 +109,10 @@ auth = HTTPBasicAuth(
 
 # Endpoint específico
 endpoints = {
-    "sales_order_detail": "/SalesOrderDetail"
+    "sales_order_detail": "/SalesOrderDetail",
+    "sales_order_header": "/SalesOrderHeader",
+    "purchase_order_detail": "/PurchaseOrderDetail",
+    "purchase_order_header": "/PurchaseOrderHeader"
 }
 
 schema = "ted_dev.dev_andre_silva"
