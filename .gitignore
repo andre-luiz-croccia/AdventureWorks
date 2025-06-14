@@ -8,7 +8,7 @@ terraform.tfvars
 
 # Variáveis de ambiente
 .env
-.env.*
+
 
 # Docker/Compose
 docker-compose.override.yml
