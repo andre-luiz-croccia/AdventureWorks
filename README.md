@@ -1,111 +1,175 @@
----
+# 🚀 Projeto Adventure Works - Databricks + Terraform + Docker
 
-## Estrutura do Projeto
+## 📦 Estrutura do Projeto
 
 - **terraform/**: Scripts Terraform para provisionamento e upload dos notebooks no Databricks.
 - **raw_api_extraction.py**: Notebook Python para extração de dados de uma API.
 - **raw_mysql_extraction.py**: Notebook Python para extração de dados de um banco MySQL.
 - **.env**: Arquivo com variáveis sensíveis (não versionado).
 - **Dockerfile / docker-compose.yml**: Containerização para execução padronizada.
-- **set_env.sh**: Script para exportar variáveis do `.env` no formato que o Terraform reconhece.
+- **set_env.sh**: Script que exporta as variáveis do `.env` no formato que o Terraform reconhece.
 
 ---
+
+## 🔄 Fluxo do Projeto
+
 ```mermaid
-fluxograma TD
+flowchart TD
     A[Preencher .env] --> B[Executar Docker Compose]
-    B --> C[Container inicia set_env.sh]
-    C --> D[Exporta variáveis TF_VAR_]
-    D --> E[Terraform init/apply]
-    E --> F[Upload dos notebooks para Databricks]
-    F --> G[Notebooks disponíveis para execução]
-    G --> H[Executar os Notebooks no Databricks]
+    B --> C[Entrar no container com bash]
+    C --> D[Rodar set_env.sh]
+    D --> E[Terraform init e apply]
+    E --> F[Upload dos notebooks no Databricks]
+    F --> G[Executar os Notebooks no Databricks]
 ```
-## Como Funciona
-
-1. **Configuração das variáveis sensíveis**  
-   Preencha o arquivo `.env` com as informações necessárias (host, token, email, etc).
-   O arquivo .env.exemplo mostra o exemplo de como as credenciais devem ser preenchidas.
-
-2. **Execução do Script de Ambiente**  
-   O script `set_env.sh` carrega as variáveis do `.env` e exporta com prefixo `TF_VAR_`, permitindo que o Terraform as utilize diretamente.
-
-3. **Provisionamento com Terraform**  
-   O `main.tf` faz o upload dos notebooks para o Databricks, utilizando as variáveis de ambiente.
-
-4. **Execução via Docker**  
-   O Dockerfile e o docker-compose garantem que todo o processo rode de forma idêntica em qualquer máquina.
 
 ---
 
-## Explicação dos Notebooks
+## ⚙️ Tecnologias Utilizadas
 
-### `raw_api_extraction.py`
-
-Este notebook realiza a extração de dados de uma API externa. O fluxo típico é:
-- Realizar requisições HTTP para uma API.
-- Processar os dados recebidos (por exemplo, converter JSON em DataFrame).
-- Salvar os dados em um formato adequado (como Parquet ou Delta) para uso posterior no Databricks.
-- Arquio irá ser salvo noambiente Catalog ted_dev.(nome).
-
-### `raw_mysql_extraction.py`
-
-Este notebook conecta-se a um banco de dados MySQL para extrair dados. O fluxo típico é:
-- Conectar ao banco MySQL usando credenciais seguras.
-- Executar queries para buscar os dados desejados.
-- Processar e salvar os dados em um formato compatível com o Databricks.
-- Arquio irá ser salvo noambiente Catalog ted_dev.(nome).
-
-> Os notebooks em formato `.ipynb` são apenas o resultado da execução desses scripts no Databricks, replicados no VS Code para referência.
+- 🐳 Docker + Docker Compose
+- 🏗️ Terraform v1.8
+- 🔗 Databricks CLI
+- ☁️ Databricks Provider Terraform
 
 ---
 
-## Como Rodar
+## 🗂️ Estrutura de Diretórios
 
-1. Crie e preencha o arquivo `.env` com as variáveis necessárias.
-2. Execute o container Docker:
-   ```sh
-   docker-compose up --build
-   ```
-3. O processo irá:
-   - Carregar as variáveis de ambiente.
-   - Inicializar e aplicar o Terraform.
-   - Fazer o upload dos notebooks para o Databricks.
-
----
-
-## Observações
-
-- Não versionar o arquivo `.env` para manter a segurança das credenciais.
-- O uso de Docker garante portabilidade e facilidade de execução em qualquer ambiente.
+```
+Adventure-Works/
+├── docker-compose.yml
+├── Dockerfile
+├── terraform/
+│   ├── main.tf
+│   ├── set_env.sh
+│   ├── .env.exemplo
+│   └── notebooks/
+│       ├── raw_api_extraction.py
+│       └── raw_mysql_extraction.py
+```
 
 ---
 
-## No Databricks
+## 🔑 Configuração do Ambiente
 
-- Executar os dois códigos qiue serão salvo em <catalog>.<schema>.<tabela>
-- Notebooks criam tabelas em estágio raw (nomeado em cada tabela)
+1. Crie um arquivo `.env` com base no `.env.exemplo`:
 
-### Gerenciamento de Segredos (Secret Scope)
+```env
+DATABRICKS_HOST=https://<seu-workspace>.cloud.databricks.com
+DATABRICKS_TOKEN=<seu_token>
+USER_EMAIL=<seu_email@databricks.com>
+```
 
-Para armazenar credenciais sensíveis (como tokens, senhas e chaves de API) de forma segura no Databricks, foi utilizado o recurso de **Secret Scope**, que permite acessar essas informações diretamente nos notebooks, sem expor dados sensíveis no código.
+---
 
-### Como criar o Secret Scope
+## 🚀 Como Executar
 
-1. Acessado o terminal com o **Databricks CLI** configurado.
-
-2. Criado um Secret Scope (substitua `sqlserver_scope` pelo nome que desejar):
+### 1️⃣ Build do Container
 
 ```bash
-databricks secrets create-scope --scope api_scope
+docker-compose build
+```
 
-Foi utilizado o scope "sqlserver_scope" para o segredo de todas as credenciais do banco de dados Mysql e da API.
+### 2️⃣ Acessar o Container com Bash
 
-BD:
-dbutils.secrets.get(scope="sqlserver_scope", key="sql_host"),
-dbutils.secrets.get(scope="sqlserver_scope", key="sql_port"),
-dbutils.secrets.get(scope="sqlserver_scope", key="sql_user"),
-dbutils.secrets.get(scope="sqlserver_scope", key="sql_password").
+> ⚠️ Importante: use `--entrypoint /bin/bash`, pois o container não possui um processo principal rodando.
 
-API:
-dbutils.secrets.get(scope="sqlserver_scope", key="api_user"),
-dbutils.secrets.get(scope="sqlserver_scope", key="api_pass").
+```bash
+docker-compose run --entrypoint /bin/bash terraform-databricks
+```
+
+### 3️⃣ Inicializar o Terraform
+
+```bash
+terraform init
+```
+
+### 4️⃣ Carregar Variáveis e Aplicar
+
+```bash
+bash set_env.sh
+terraform apply
+```
+
+---
+
+## 🧹 Limpeza (opcional)
+
+Para remover containers órfãos e a rede:
+
+```bash
+docker-compose down --remove-orphans
+```
+
+---
+
+## 📄 Explicação dos Notebooks
+
+### 🔗 `raw_api_extraction.py`
+
+- Faz requisições HTTP a uma API.
+- Processa os dados (JSON → DataFrame).
+- Salva no ambiente Databricks no catalog: `ted_dev.<nome_da_tabela>`.
+
+### 🗄️ `raw_mysql_extraction.py`
+
+- Conecta ao MySQL.
+- Executa consultas e extrai dados.
+- Salva no Databricks no catalog: `ted_dev.<nome_da_tabela>`.
+
+> ✅ Os notebooks `.ipynb` gerados são espelhos da execução dentro do Databricks, para referência local.
+
+---
+
+## 🔐 Gerenciamento de Segredos no Databricks
+
+### ✅ Criação de Secret Scope
+
+```bash
+databricks secrets create-scope --scope sqlserver_scope
+```
+
+### 🔑 Chaves armazenadas no scope `sqlserver_scope`:
+
+- **Banco de Dados:**
+  - `sql_host`
+  - `sql_port`
+  - `sql_user`
+  - `sql_password`
+
+- **API:**
+  - `api_user`
+  - `api_pass`
+
+### 🔍 Acesso nos notebooks:
+
+```python
+dbutils.secrets.get(scope="sqlserver_scope", key="sql_host")
+dbutils.secrets.get(scope="sqlserver_scope", key="api_user")
+```
+
+---
+
+## ✅ Recursos Provisionados
+
+- Diretório no Databricks: `/Users/<seu_email>/Adventure_Works`
+- Notebooks enviados automaticamente:
+  - `raw_api_extraction`
+  - `raw_mysql_extraction`
+
+> Após provisionar, execute os notebooks diretamente no Databricks.
+
+---
+
+## ⚠️ Observações
+
+- O arquivo `.env` **não deve ser versionado**.
+- O uso de Docker garante portabilidade e reprodutibilidade do ambiente.
+- A utilização do comando:
+
+```bash
+docker-compose run --entrypoint /bin/bash terraform-databricks
+```
+
+é **obrigatória**, pois o container não possui um processo ativo por padrão.
